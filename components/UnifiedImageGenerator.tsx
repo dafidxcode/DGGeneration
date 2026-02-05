@@ -44,7 +44,8 @@ export const UnifiedImageGenerator: React.FC<UnifiedImageGeneratorProps> = ({ on
     // Imagen Specific State
     const [imagenStyle, setImagenStyle] = useState('photorealistic');
 
-    const BASE_URL = import.meta.env.VITE_BASE_URL || '';
+    // Safe URL handling with fallback
+    const BASE_URL = import.meta.env.VITE_BASE_URL || 'https://viinapi.netlify.app';
 
     const handleGenerate = async () => {
         if (!prompt.trim()) return;
@@ -65,6 +66,8 @@ export const UnifiedImageGenerator: React.FC<UnifiedImageGeneratorProps> = ({ on
         const endpoint = engine === 'nano'
             ? `${BASE_URL}/api/image`
             : `${BASE_URL}/api/imagen`;
+
+        console.log('Starting image generation:', endpoint);
 
         // Number of requests: Nano usually uses 2 parallel requests in the original code. Imagen uses 2 as well in the original code.
         // We will stick to the pattern of generating 2 images if the API supports it or via parallel requests.
@@ -95,7 +98,26 @@ export const UnifiedImageGenerator: React.FC<UnifiedImageGeneratorProps> = ({ on
                     body: JSON.stringify(payload)
                 });
 
-                const data = await response.json();
+                // Check if response is OK
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API Error Response:', errorText);
+                    throw new Error(`API Request Failed: ${response.status} ${response.statusText}`);
+                }
+
+                // Safe JSON parsing
+                let data;
+                try {
+                    const text = await response.text();
+                    try {
+                        data = JSON.parse(text);
+                    } catch (e) {
+                        console.error('Failed to parse API response:', text.substring(0, 200));
+                        throw new Error('Invalid server response (not JSON)');
+                    }
+                } catch (e: any) {
+                    throw new Error(e.message || 'Failed to read response');
+                }
 
                 if (!data.success && !data.ok && data.status !== 'processing') {
                     throw new Error(data.error || 'Unable to start generation.');
@@ -226,7 +248,26 @@ export const UnifiedImageGenerator: React.FC<UnifiedImageGeneratorProps> = ({ on
                 body: JSON.stringify(payload)
             });
 
-            const data = await response.json();
+            // Check if response is OK
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                throw new Error(`API Request Failed: ${response.status} ${response.statusText}`);
+            }
+
+            // Safe JSON parsing
+            let data;
+            try {
+                const text = await response.text();
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('Failed to parse API response:', text.substring(0, 200));
+                    throw new Error('Invalid server response (not JSON)');
+                }
+            } catch (e: any) {
+                throw new Error(e.message || 'Failed to read response');
+            }
             if (!data.success && !data.ok && data.status !== 'processing') {
                 throw new Error('Unable to start generation.');
             }

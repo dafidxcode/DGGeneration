@@ -133,8 +133,6 @@ export const VeoVideoGenerator: React.FC<VeoVideoGeneratorProps> = ({ initialIma
             const baseUrl = import.meta.env.VITE_BASE_URL || 'https://viinapi.netlify.app';
             const endpoint = `${baseUrl}/api/video`;
 
-            console.log('Starting video generation with params:', params);
-            console.log('Using API Endpoint:', endpoint);
 
             // Step 1: Submit Request
             const response = await fetch(`${endpoint}?${queryParams.toString()}`);
@@ -198,11 +196,6 @@ export const VeoVideoGenerator: React.FC<VeoVideoGeneratorProps> = ({ initialIma
                 throw new Error('No Request ID returned from server');
             }
 
-            console.log(`Generation started. Request ID: ${effectiveId}`);
-
-            // Step 2: Poll for Result using the shared utility
-            // Dynamic import to avoid circular dependencies if any, though likely not needed here. 
-            // Better to import at top level, but for this edit block:
             const { pollStatus } = await import('../services/api');
 
             const finalResult = await pollStatus(endpoint, effectiveId, 8000); // 8s interval as per request

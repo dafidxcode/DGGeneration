@@ -67,13 +67,6 @@ export const UnifiedImageGenerator: React.FC<UnifiedImageGeneratorProps> = ({ on
             ? `${BASE_URL}/api/image`
             : `${BASE_URL}/api/imagen`;
 
-        console.log('Starting image generation:', endpoint);
-
-        // Number of requests: Nano usually uses 2 parallel requests in the original code. Imagen uses 2 as well in the original code.
-        // We will stick to the pattern of generating 2 images if the API supports it or via parallel requests.
-        // Original Nano: [1, 2].map...
-        // Original Imagen: [1, 2].map...
-
         const requests = [1, 2].map(async (_) => {
             try {
                 const currentPrompt = prompt;

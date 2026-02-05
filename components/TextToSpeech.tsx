@@ -91,8 +91,6 @@ export const TextToSpeech: React.FC<TextToSpeechProps> = ({ user }) => {
             const baseUrl = import.meta.env.VITE_BASE_URL || 'https://viinapi.netlify.app';
             const endpoint = `${baseUrl}/api/tts`;
 
-            console.log('Starting TTS generation:', endpoint);
-
             const response = await fetch(`${endpoint}?${queryParams.toString()}`);
 
             // Check if response is OK

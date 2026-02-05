@@ -102,8 +102,6 @@ export const SunoMusicGenerator: React.FC<SunoMusicGeneratorProps> = ({ user }) 
             const baseUrl = import.meta.env.VITE_BASE_URL || 'https://viinapi.netlify.app';
             const endpoint = `${baseUrl}/api/music`;
 
-            console.log('Starting music generation:', endpoint);
-
             // Step 1: Submit Request
             const response = await fetch(endpoint, {
                 method: 'POST',

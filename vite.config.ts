@@ -62,8 +62,6 @@ export default defineConfig(({ mode }) => {
 
             try {
               const decodedUrl = decodeURIComponent(targetUrlParam);
-              console.log('Proxying request to:', decodedUrl);
-
               // Use native fetch (Node 18+)
               const response = await fetch(decodedUrl);
 

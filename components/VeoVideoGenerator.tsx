@@ -128,13 +128,37 @@ export const VeoVideoGenerator: React.FC<VeoVideoGeneratorProps> = ({ initialIma
             }
 
             const queryParams = new URLSearchParams(params);
-            const endpoint = `${import.meta.env.VITE_BASE_URL}/api/video`;
+
+            // Safe URL handling with fallback
+            const baseUrl = import.meta.env.VITE_BASE_URL || 'https://viinapi.netlify.app';
+            const endpoint = `${baseUrl}/api/video`;
 
             console.log('Starting video generation with params:', params);
+            console.log('Using API Endpoint:', endpoint);
 
             // Step 1: Submit Request
             const response = await fetch(`${endpoint}?${queryParams.toString()}`);
-            const data = await response.json();
+
+            // Check if response is OK
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                throw new Error(`API Request Failed: ${response.status} ${response.statusText}`);
+            }
+
+            // Safe JSON parsing
+            let data;
+            try {
+                const text = await response.text();
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('Failed to parse API response:', text.substring(0, 200)); // Log first 200 chars
+                    throw new Error('Invalid server response (not JSON)');
+                }
+            } catch (e: any) {
+                throw new Error(e.message || 'Failed to read response');
+            }
 
 
             // Handle success based on user feedback: "ok": false, "status": "queued" is valid
@@ -247,7 +271,7 @@ export const VeoVideoGenerator: React.FC<VeoVideoGeneratorProps> = ({ initialIma
             const blobUrl = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = blobUrl;
-            link.download = `dg-generated-video-${Date.now()}.mp4`;
+            link.download = `dg-video-${Date.now()}.mp4`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);

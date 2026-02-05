@@ -98,7 +98,11 @@ export const SunoMusicGenerator: React.FC<SunoMusicGeneratorProps> = ({ user }) 
 
 
 
-            const endpoint = `${import.meta.env.VITE_BASE_URL}/api/music`;
+            // Safe URL handling with fallback
+            const baseUrl = import.meta.env.VITE_BASE_URL || 'https://viinapi.netlify.app';
+            const endpoint = `${baseUrl}/api/music`;
+
+            console.log('Starting music generation:', endpoint);
 
             // Step 1: Submit Request
             const response = await fetch(endpoint, {
@@ -107,7 +111,26 @@ export const SunoMusicGenerator: React.FC<SunoMusicGeneratorProps> = ({ user }) 
                 body: JSON.stringify(payload)
             });
 
-            const data = await response.json();
+            // Check if response is OK
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                throw new Error(`API Request Failed: ${response.status} ${response.statusText}`);
+            }
+
+            // Safe JSON parsing
+            let data;
+            try {
+                const text = await response.text();
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error('Failed to parse API response:', text.substring(0, 200));
+                    throw new Error('Invalid server response (not JSON)');
+                }
+            } catch (e: any) {
+                throw new Error(e.message || 'Failed to read response');
+            }
 
 
             if (!data.success && !data.ok && data.status !== 'processing') {

@@ -87,7 +87,21 @@ export const TextToSpeech: React.FC<TextToSpeechProps> = ({ user }) => {
                 stability: stability.toString()
             });
 
-            const response = await fetch(`${import.meta.env.VITE_BASE_URL}/api/tts?${queryParams.toString()}`);
+            // Safe URL handling with fallback
+            const baseUrl = import.meta.env.VITE_BASE_URL || 'https://viinapi.netlify.app';
+            const endpoint = `${baseUrl}/api/tts`;
+
+            console.log('Starting TTS generation:', endpoint);
+
+            const response = await fetch(`${endpoint}?${queryParams.toString()}`);
+
+            // Check if response is OK
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                throw new Error(`API Request Failed: ${response.status} ${response.statusText}`);
+            }
+
             const data = await response.json();
 
             if (data.success && data.url) {

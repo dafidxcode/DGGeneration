@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- HELPER FUNCTIONS ---
+
+    // 1. Cek apakah user adalah Admin
+    // Menambahkan kiyantodavin2@gmail.com ke daftar admin
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email == 'rohmadhadi360@gmail.com' || 
+        request.auth.token.email == 'kiyantodavin2@gmail.com' ||
+        request.auth.token.email == 'adminbaru@gmail.com' ||
+        request.auth.token.email == 'boss@gmail.com'
+      );
+    }
+
+    // 2. Cek apakah user mengakses path ID miliknya sendiri (untuk /users/{userId})
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // 3. Cek kepemilikan data berdasarkan field 'userId' di dalam dokumen (untuk /media)
+    function isResourceOwner() {
+      return request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // --- RULES ---
+
+    // A. KOLEKSI SETTINGS (Global Limits)
+    match /settings/global {
+      // Semua user login boleh baca (untuk cek limit)
+      allow read: if request.auth != null;
+      // Hanya Admin yang boleh ubah limit
+      allow write: if isAdmin();
+    }
+
+    // B. KOLEKSI USERS
+    // Menggunakan logika yang lebih ketat (Set 2) untuk keamanan Tier
+    match /users/{userId} {
+      // Admin punya akses penuh
+      allow read, write: if isAdmin();
+
+      // User boleh baca profil sendiri
+      allow read: if isOwner(userId);
+
+      // User boleh buat profil baru TAPI tier wajib 'FREE'
+      allow create: if isOwner(userId) 
+                    && request.resource.data.tier == 'FREE';
+
+      // User boleh update data lain, TAPI dilarang mengubah 'tier'
+      allow update: if isOwner(userId) 
+                    && request.resource.data.tier == resource.data.tier;
+    }
+
+    // C. KOLEKSI MEDIA
+    match /media/{mediaId} {
+      // Read: Admin boleh baca ATAU Pemilik data boleh baca
+      allow read: if isAdmin() || isResourceOwner();
+      
+      // Create: Admin boleh buat ATAU User boleh buat (asal userId diset sesuai auth uid)
+      allow create: if isAdmin() || (request.auth != null && request.resource.data.userId == request.auth.uid);
+      
+      // Update/Delete: Admin boleh hapus/edit ATAU Pemilik data boleh hapus/edit
+      allow delete, update: if isAdmin() || isResourceOwner();
+    }
+  }
+}

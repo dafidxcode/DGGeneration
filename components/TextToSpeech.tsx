@@ -87,9 +87,8 @@ export const TextToSpeech: React.FC<TextToSpeechProps> = ({ user }) => {
                 stability: stability.toString()
             });
 
-            // Safe URL handling with fallback
-            const baseUrl = import.meta.env.VITE_BASE_URL || 'https://viinapi.netlify.app';
-            const endpoint = `${baseUrl}/api/tts`;
+            // Use local proxy to hide backend API URL
+            const endpoint = `/api/tts`;
 
             const response = await fetch(`${endpoint}?${queryParams.toString()}`);
 

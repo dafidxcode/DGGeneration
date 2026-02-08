@@ -44,8 +44,8 @@ export const UnifiedImageGenerator: React.FC<UnifiedImageGeneratorProps> = ({ on
     // Imagen Specific State
     const [imagenStyle, setImagenStyle] = useState('photorealistic');
 
-    // Safe URL handling with fallback
-    const BASE_URL = import.meta.env.VITE_BASE_URL || 'https://viinapi.netlify.app';
+    // Use local proxy to hide backend API URL
+    const BASE_URL = '';
 
     const handleGenerate = async () => {
         if (!prompt.trim()) return;
@@ -62,10 +62,10 @@ export const UnifiedImageGenerator: React.FC<UnifiedImageGeneratorProps> = ({ on
         setStatus(GenerationStatus.PROCESSING);
         setErrorMsg('');
 
-        // Define API endpoint and payload based on engine
+        // Define API endpoint and payload based on engine (using local proxy)
         const endpoint = engine === 'nano'
-            ? `${BASE_URL}/api/image`
-            : `${BASE_URL}/api/imagen`;
+            ? `/api/image`
+            : `/api/imagen`;
 
         const requests = [1, 2].map(async (_) => {
             try {
@@ -214,11 +214,11 @@ export const UnifiedImageGenerator: React.FC<UnifiedImageGeneratorProps> = ({ on
 
         setRetryingIds(prev => [...prev, img.id]);
         try {
-            // Use original engine for retry
+            // Use original engine for retry (using local proxy)
             const currentEngine = img.engine;
             const endpoint = currentEngine === 'nano'
-                ? `${BASE_URL}/api/image`
-                : `${BASE_URL}/api/imagen`;
+                ? `/api/image`
+                : `/api/imagen`;
 
             const finalPrompt = img.negativePrompt ? `${img.prompt} --no ${img.negativePrompt}` : img.prompt;
 
@@ -310,9 +310,8 @@ export const UnifiedImageGenerator: React.FC<UnifiedImageGeneratorProps> = ({ on
                 });
             }, 150);
 
-            // Use VITE_BASE_URL if proxy is relative, or keep as relative if same origin
-            // usually /api/proxy implies same origin usage.
-            const proxyUrl = `${BASE_URL}/api/proxy?url=${encodeURIComponent(url)}`;
+            // Use local proxy for downloads
+            const proxyUrl = `/api/proxy?url=${encodeURIComponent(url)}`;
             const response = await fetch(proxyUrl);
             if (!response.ok) throw new Error('Network response was not ok');
 

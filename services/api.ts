@@ -10,6 +10,7 @@ export interface PollResult {
     records?: any[];      // Alternative for Music list
     message?: string;
     error?: string;
+    result?: string[]; // Added to support video result array
 }
 
 export async function pollStatus(endpoint: string, requestId: string, intervalMs: number = 5000): Promise<PollResult> {

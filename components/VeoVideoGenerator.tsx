@@ -111,31 +111,32 @@ export const VeoVideoGenerator: React.FC<VeoVideoGeneratorProps> = ({ initialIma
             // Combine prompt and negative prompt
             const finalPrompt = negativePrompt ? `${prompt} --no ${negativePrompt}` : prompt;
 
-            const params: Record<string, string> = {
-                prompt: finalPrompt,
-                ratio: aspectRatio,
-                model: 'veo-3.1-fast',
-                type: generationType
-            };
 
-            if (generationType === 'image-to-video' && uploadedUrl) {
-                // Ensure URL is absolute for external API
-                let finalImageUrl = uploadedUrl;
-                if (uploadedUrl.startsWith('/')) {
-                    finalImageUrl = `${window.location.origin}${uploadedUrl}`;
-                }
-                params.imageUrls = finalImageUrl;
-            }
-
-            const queryParams = new URLSearchParams(params);
 
             // Safe URL handling with fallback
-            const baseUrl = import.meta.env.VITE_BASE_URL || 'https://viinapi.netlify.app';
-            const endpoint = `${baseUrl}/api/video`;
+            // Connect to Local Proxy
+            const endpoint = `/api/video`;
 
+            // Step 1: Submit Request (POST JSON)
+            const videoType = (generationType === 'image-to-video' && uploadedUrl) ? 'image-to-video' : 'text-to-video';
+            const payload: any = {
+                prompt: finalPrompt,
+                model: model,
+                ratio: aspectRatio,
+                type: videoType
+            };
 
-            // Step 1: Submit Request
-            const response = await fetch(`${endpoint}?${queryParams.toString()}`);
+            if (videoType === 'image-to-video' && uploadedUrl) {
+                payload.imageUrls = uploadedUrl;
+            }
+
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            });
 
             // Check if response is OK
             if (!response.ok) {
@@ -151,16 +152,14 @@ export const VeoVideoGenerator: React.FC<VeoVideoGeneratorProps> = ({ initialIma
                 try {
                     data = JSON.parse(text);
                 } catch (e) {
-                    console.error('Failed to parse API response:', text.substring(0, 200)); // Log first 200 chars
+                    console.error('Failed to parse API response:', text.substring(0, 200));
                     throw new Error('Invalid server response (not JSON)');
                 }
             } catch (e: any) {
                 throw new Error(e.message || 'Failed to read response');
             }
 
-
-            // Handle success based on user feedback: "ok": false, "status": "queued" is valid
-            // Or standard "success": true. 
+            // Handle success
             const isQueued = data.status === 'queued';
             const isProcessing = data.status === 'processing';
             const isSuccess = data.success || data.ok;
@@ -169,28 +168,15 @@ export const VeoVideoGenerator: React.FC<VeoVideoGeneratorProps> = ({ initialIma
                 throw new Error(data.error || 'Unable to start video generation. Please try again.');
             }
 
-            // Increment Usage on successful start
+            // Increment Usage
             await userService.incrementUsage(user.uid, 'video');
 
-            const requestId = data.requestId;
+            // Handle Request ID
+            const requestId = data.requestId || data.id || data.jobId;
 
-            // Special handling for queued items that might lack requestId initially or need position monitoring
-            if (!requestId && isQueued && data.position) {
-                // For now, if we don't have an ID to poll, we can't track it easily with the current poller.
-                // However, the user's issue implies they just want it to NOT fail immediately.
-                // If the API allows queued items to return a requestId later or via a different call, we'd need that.
-                // BUT, typically standard APIs return an ID even if queued.
-                // Let's assume if it's queued, we might have to wait or check `data.id` or `data.jobId`.
-                // If we have NO ID, we can't poll.
-                // Let's try to grab ANY ID.
-            }
-
-            const effectiveId = requestId || data.id || data.jobId;
-
-            if (!effectiveId) {
-                if (isQueued) {
-                    // If queued but no ID, allow it but warn? Or maybe just fail gracefully?
-                    // Let's throw a specific error for now if we really can't track it.
+            if (!requestId) {
+                if (isQueued && data.position) {
+                    // Queue handling without ID if necessary, but ideally we need an ID
                     throw new Error(`Request queued at position ${data.position} but no Tracking ID returned.`);
                 }
                 throw new Error('No Request ID returned from server');
@@ -198,33 +184,33 @@ export const VeoVideoGenerator: React.FC<VeoVideoGeneratorProps> = ({ initialIma
 
             const { pollStatus } = await import('../services/api');
 
-            const finalResult = await pollStatus(endpoint, effectiveId, 8000); // 8s interval as per request
+            // Start Polling
+            // Note: pollStatus in api.ts handles the loop. 
+            // We pass the SAME endpoint because the API uses GET /api/video?requestId=... for polling too.
+            const finalResult = await pollStatus(endpoint, requestId, 8000);
 
-            if (finalResult.video_url) {
+            if (finalResult.video_url || (finalResult.result && finalResult.result[0])) {
+                const videoUrl = finalResult.video_url || finalResult.result[0];
+
                 // Save to DB & Cache Locally FIRST
                 try {
-                    // Update: wait for save to complete before showing result
-                    // Save to Firestore with metadata
                     const savedMedia = await mediaService.saveAndCacheMedia(
                         user.uid,
                         'VIDEO',
-                        finalResult.video_url,
+                        videoUrl,
                         prompt,
                         {
-                            video_url: finalResult.video_url,
+                            video_url: videoUrl,
                             model: model,
                             ratio: aspectRatio
                         }
                     );
-
-                    // Update UI with the LOCAL URL (served from our server)
                     setResultUrl(savedMedia.url);
                     setStatus(GenerationStatus.COMPLETED);
 
                 } catch (e) {
                     console.error('Failed to save to DB:', e);
-                    // Fallback
-                    setResultUrl(finalResult.video_url);
+                    setResultUrl(videoUrl);
                     setStatus(GenerationStatus.COMPLETED);
                 }
 

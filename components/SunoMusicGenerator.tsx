@@ -98,9 +98,8 @@ export const SunoMusicGenerator: React.FC<SunoMusicGeneratorProps> = ({ user }) 
 
 
 
-            // Safe URL handling with fallback
-            const baseUrl = import.meta.env.VITE_BASE_URL || 'https://viinapi.netlify.app';
-            const endpoint = `${baseUrl}/api/music`;
+            // Use local proxy to hide backend API URL
+            const endpoint = `/api/music`;
 
             // Step 1: Submit Request
             const response = await fetch(endpoint, {

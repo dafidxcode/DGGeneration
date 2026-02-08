@@ -35,6 +35,7 @@ RUN npm ci --only=production
 # Copy built assets from build stage
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/server.js ./server.js
+COPY --from=build /app/routes ./routes
 
 
 

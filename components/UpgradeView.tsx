@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from './Button';
 import { Check, Sparkles, MessageCircle, Crown, Zap } from 'lucide-react';
+import { adminService } from '../services/firebase';
 
 export const UpgradeView: React.FC = () => {
     const handleOrder = () => {
@@ -10,12 +11,10 @@ export const UpgradeView: React.FC = () => {
     const [pricing, setPricing] = React.useState({ price: 50000, promo: 0 });
 
     React.useEffect(() => {
-        import('../services/firebase').then(({ adminService }) => {
-            adminService.getGlobalSettings().then(settings => {
-                setPricing({
-                    price: settings.packagePrice || 200000,
-                    promo: settings.promoPrice || 0
-                });
+        adminService.getGlobalSettings().then(settings => {
+            setPricing({
+                price: settings.packagePrice || 200000,
+                promo: settings.promoPrice || 0
             });
         });
     }, []);

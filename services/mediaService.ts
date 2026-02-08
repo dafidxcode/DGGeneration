@@ -16,7 +16,7 @@ const getDb = () => {
 export interface SavedMedia {
     id: string;
     userId: string;
-    type: 'VIDEO' | 'MUSIC' | 'IMAGE';
+    type: 'VIDEO' | 'MUSIC' | 'IMAGE' | 'TTS';
     url: string; // External URL
     prompt: string;
     metadata?: any;
@@ -26,7 +26,7 @@ export interface SavedMedia {
 
 export const mediaService = {
     // Save ONLY metadata to Firestore
-    async saveAndCacheMedia(userId: string, type: 'VIDEO' | 'MUSIC' | 'IMAGE', url: string, prompt: string, metadata?: any) {
+    async saveAndCacheMedia(userId: string, type: 'VIDEO' | 'MUSIC' | 'IMAGE' | 'TTS', url: string, prompt: string, metadata?: any) {
         try {
             const db = getDb();
             const mediaRef = collection(db, 'media');
@@ -68,14 +68,15 @@ export const mediaService = {
         }
     },
 
-    async getUserMedia(userId: string, type?: 'VIDEO' | 'MUSIC' | 'IMAGE') {
+    async getUserMedia(userId: string, type?: 'VIDEO' | 'MUSIC' | 'IMAGE' | 'TTS') {
         try {
             const db = getDb();
             const mediaRef = collection(db, 'media');
-            let q = query(mediaRef, where("userId", "==", userId), orderBy("createdAt", "desc"));
+            // Remove orderBy to avoid index issues. Client-side sort instead.
+            let q = query(mediaRef, where("userId", "==", userId));
 
             if (type) {
-                q = query(mediaRef, where("userId", "==", userId), where("type", "==", type), orderBy("createdAt", "desc"));
+                q = query(mediaRef, where("userId", "==", userId), where("type", "==", type));
             }
 
             const querySnapshot = await getDocs(q);
@@ -103,6 +104,9 @@ export const mediaService = {
                     });
                 }
             });
+
+            // Sort by createdAt desc (Newest first)
+            validDocs.sort((a, b) => b.createdAt - a.createdAt);
 
             return validDocs;
         } catch (e) {

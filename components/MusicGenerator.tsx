@@ -7,14 +7,14 @@ import { userService } from '../services/firebase';
 
 import { CustomAudioPlayer } from './CustomAudioPlayer';
 
-interface SunoMusicGeneratorProps {
+interface MusicGeneratorProps {
     user: any;
 }
 
 import { mediaService } from '../services/mediaService';
 import { RecentGenerations } from './RecentGenerations';
 
-export const SunoMusicGenerator: React.FC<SunoMusicGeneratorProps> = ({ user }) => {
+export const MusicGenerator: React.FC<MusicGeneratorProps> = ({ user }) => {
     const [customMode, setCustomMode] = useState(false);
     const [instrumental, setInstrumental] = useState(false);
     const [prompt, setPrompt] = useState(''); // Serves as Lyrics in custom mode, Description in simple

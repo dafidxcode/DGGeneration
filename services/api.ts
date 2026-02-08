@@ -18,8 +18,9 @@ export async function pollStatus(endpoint: string, requestId: string, intervalMs
         const checkStatus = async () => {
             try {
                 // Construct URL with requestId
-                const url = new URL(endpoint);
-                url.searchParams.append('requestId', requestId);
+                // Handle relative URLs by providing base
+                const url = new URL(endpoint, window.location.origin);
+                url.searchParams.set('requestId', requestId);
 
 
 

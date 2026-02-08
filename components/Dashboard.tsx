@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { TOOLS, APP_NAME } from '../constants';
 import { ToolId } from '../types';
-import { VeoVideoGenerator } from './VeoVideoGenerator';
-import { SunoMusicGenerator } from './SunoMusicGenerator';
+import { VideoGenerator } from './VideoGenerator';
+import { MusicGenerator } from './MusicGenerator';
 
-import { UnifiedImageGenerator } from './UnifiedImageGenerator';
+import { UnifiedImageGenerator as ImageGenerator } from './ImageGenerator';
 import { TextToSpeech } from './TextToSpeech';
 import { AdminDashboard } from './AdminDashboard';
 import { UpgradeView } from './UpgradeView';
@@ -58,16 +58,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, user }) => {
    const renderActiveGenerator = () => {
       switch (activeTool) {
          case 'video':
-            return <VeoVideoGenerator user={user} initialImage={navigationPayload.image} />;
+            return <VideoGenerator user={user} initialImage={navigationPayload.image} />;
          case 'music':
-            return <SunoMusicGenerator user={user} />;
+            return <MusicGenerator user={user} />;
          case 'image':
-            return <UnifiedImageGenerator user={user} onNavigateToVideo={handleNavigateToVideo} />;
+            return <ImageGenerator user={user} onNavigateToVideo={handleNavigateToVideo} />;
          case 'tts':
             return <TextToSpeech user={user} />;
          // case 'imagen': Removed in favor of Unified Generator
          case 'admin':
-            return isAdmin ? <AdminDashboard /> : <SunoMusicGenerator user={user} />;
+            return isAdmin ? <AdminDashboard /> : <MusicGenerator user={user} />;
          case 'upgrade':
             return <UpgradeView />;
          case 'library':
@@ -87,7 +87,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout, user }) => {
                </div>
             );
          default:
-            return <SunoMusicGenerator user={user} />;
+            return <MusicGenerator user={user} />;
       }
    };
 

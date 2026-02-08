@@ -26,6 +26,26 @@ export default defineConfig(({ mode }) => {
           target: 'http://localhost:3001',
           changeOrigin: true,
         },
+        '/api/tts': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+        },
+        '/api/music': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+        },
+        '/api/image': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+        },
+        '/api/imagen': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+        },
+        '/api/video': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+        },
         '/api/proxy': {
           target: 'http://localhost:3001', // Self-reference, we hijack it in configureServer
           changeOrigin: true,

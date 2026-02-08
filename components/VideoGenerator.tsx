@@ -10,12 +10,12 @@ type AspectRatio = '16:9' | '9:16';
 type GenerationType = 'text-to-video' | 'image-to-video';
 type VeoModel = 'veo-3.1-fast' | 'veo-3.1';
 
-interface VeoVideoGeneratorProps {
+interface VideoGeneratorProps {
     initialImage?: string;
     user: any;
 }
 
-export const VeoVideoGenerator: React.FC<VeoVideoGeneratorProps> = ({ initialImage, user }) => {
+export const VideoGenerator: React.FC<VideoGeneratorProps> = ({ initialImage, user }) => {
     const [generationType, setGenerationType] = useState<GenerationType>('text-to-video');
     const [prompt, setPrompt] = useState('');
     const [negativePrompt, setNegativePrompt] = useState('');

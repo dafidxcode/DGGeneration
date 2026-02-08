@@ -4,6 +4,8 @@ import { Button } from './Button';
 import { Settings, Download, Activity, Wand2, Mic, Search, User, Volume2, Play, Pause } from 'lucide-react';
 import { TTS_VOICES, Voice } from './data/voiceData';
 import { userService } from '../services/firebase';
+import { mediaService } from '../services/mediaService';
+import { RecentGenerations } from './RecentGenerations';
 
 import { CustomAudioPlayer } from './CustomAudioPlayer';
 
@@ -104,6 +106,20 @@ export const TextToSpeech: React.FC<TextToSpeechProps> = ({ user }) => {
             if (data.success && data.url) {
                 // Increment Usage
                 await userService.incrementUsage(user.uid, 'tts');
+
+                // Save to Media History
+                await mediaService.saveAndCacheMedia(
+                    user.uid,
+                    'TTS',
+                    data.url,
+                    prompt,
+                    {
+                        voice: selectedVoice.name,
+                        lang: selectedVoice.lang,
+                        engine: selectedVoice.engine
+                    }
+                );
+
                 setResultUrl(data.url);
                 setStatus(GenerationStatus.COMPLETED);
             } else {
@@ -365,6 +381,8 @@ export const TextToSpeech: React.FC<TextToSpeechProps> = ({ user }) => {
                     </div>
                 </div>
             </div>
+
+            <RecentGenerations userId={user.uid} type="TTS" onSelect={(url) => setResultUrl(url)} />
         </div>
     );
 };
